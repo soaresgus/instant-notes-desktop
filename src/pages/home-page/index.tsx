@@ -1,9 +1,30 @@
 import { DottedButton } from "@/components/ui/dotted-button";
-import { PlusCircle, LinkIcon } from "lucide-react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { readTextFile } from "@tauri-apps/plugin-fs";
+import { PlusCircle, LinkIcon, Import } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function HomePage() {
     const navigate = useNavigate();
+
+    const handleImportTxt = async () => {
+        try {
+            const filePath = await open({
+                title: "Select a .txt file to import",
+                filters: [{ name: "Text", extensions: ["txt"] }],
+                multiple: false
+            })
+
+            if (!filePath) return;
+
+            console.log("Selected file:", filePath);
+            const text = await readTextFile(filePath);
+            console.log("File content:", text);
+            navigate("/new-note", { state: { importedText: text } });
+        } catch (err) {
+            console.error("Failed to import .txt file:", err);
+        }
+    }
 
     return (
         <main className="min-h-screen flex flex-col items-center justify-center gap-4 bg-zinc-900">
@@ -21,6 +42,13 @@ export default function HomePage() {
                 <DottedButton className="flex items-center justify-center gap-2" onClick={() => navigate("/public-note")}>
                     <LinkIcon size={24} />
                     <span>Access public note</span>
+                </DottedButton>
+            </section>
+
+            <section className="flex justify-center">
+                <DottedButton className="flex items-center justify-center gap-2" onClick={handleImportTxt}>
+                    <Import size={24} />
+                    <span>Import from a .txt file</span>
                 </DottedButton>
             </section>
         </main>
