@@ -2,6 +2,7 @@ import { DottedButton } from "@/components/ui/dotted-button";
 import { ArrowLeft, DoorOpen } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function PublicNotePage() {
     const [code, setCode] = useState('')
@@ -10,7 +11,7 @@ export default function PublicNotePage() {
 
     const handleAccessNote = () => {
         if (code.trim() === '') {
-            alert('Please enter a note code.');
+            toast.error('Please enter a note code');
             return;
         }
         navigate(`/${code}`);
