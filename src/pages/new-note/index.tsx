@@ -1,14 +1,18 @@
 import { DottedButton } from "@/components/ui/dotted-button";
+import { useCreateNote } from "@/hooks/use-create-note";
+import { isTauri } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
-import { ArrowLeft, FileEdit, UploadCloud } from "lucide-react";
+import { ArrowLeft, FileEdit, Loader2, UploadCloud } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function NewNotePage() {
     const navigate = useNavigate();
     const importedText = history.state?.usr?.importedText || '';
     const [text, setText] = useState('')
+    const { mutateAsync, isPending, isSuccess, data } = useCreateNote();
 
     async function handleExportTxt() {
         try {
@@ -27,6 +31,49 @@ export default function NewNotePage() {
         }
     }
 
+    async function handlePublishNote() {
+        try {
+            await mutateAsync(text);
+            toast.success("Note published successfully!");
+        } catch (err) {
+            toast.error("Failed to publish note.");
+        }
+    }
+
+    function handleCopyCode(code: string) {
+        if (!code) return;
+
+        navigator.clipboard.writeText(code);
+        toast.success("Code copied to clipboard!");
+    }
+
+    const noteCode = data?.code ?? "";
+
+    const handlePublishButtonClick = isSuccess
+        ? () => handleCopyCode(noteCode)
+        : handlePublishNote;
+
+
+    let publishButtonContent: React.ReactNode;
+
+    if (isPending) {
+        publishButtonContent = <Loader2 size={20} className="animate-spin" />;
+    } else if (isSuccess) {
+        publishButtonContent = (
+            <div className="flex items-center justify-center gap-1">
+                <span>Code: {noteCode}</span>
+                <span className="text-xs">(Click to copy)</span>
+            </div>
+        );
+    } else {
+        publishButtonContent = (
+            <>
+                <UploadCloud size={20} />
+                <span>Save and publish</span>
+            </>
+        );
+    }
+
     useEffect(() => {
         if (!importedText) return;
 
@@ -42,14 +89,19 @@ export default function NewNotePage() {
                 </DottedButton>
 
                 <section className="flex gap-2">
-                    <DottedButton className="flex items-center justify-center gap-2 w-fit" onClick={handleExportTxt}>
-                        <FileEdit size={20} />
-                        <span>Export .txt file</span>
-                    </DottedButton>
+                    {isTauri() && (
+                        <DottedButton className="flex items-center justify-center gap-2 w-fit" onClick={handleExportTxt}>
+                            <FileEdit size={20} />
+                            <span>Export .txt file</span>
+                        </DottedButton>
+                    )}
 
-                    <DottedButton className="flex items-center justify-center gap-2 w-fit">
-                        <UploadCloud size={20} />
-                        <span>Save and publish</span>
+                    <DottedButton
+                        className="flex items-center justify-center gap-2 w-fit"
+                        onClick={handlePublishButtonClick}
+                        disabled={isPending}
+                    >
+                        {publishButtonContent}
                     </DottedButton>
                 </section>
             </section>

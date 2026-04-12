@@ -1,4 +1,5 @@
 import { DottedButton } from "@/components/ui/dotted-button";
+import { isTauri } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { PlusCircle, LinkIcon, Import } from "lucide-react";
@@ -45,12 +46,14 @@ export default function HomePage() {
                 </DottedButton>
             </section>
 
-            <section className="flex justify-center">
-                <DottedButton className="flex items-center justify-center gap-2" onClick={handleImportTxt}>
-                    <Import size={24} />
-                    <span>Import from a .txt file</span>
-                </DottedButton>
-            </section>
+            {isTauri() && (
+                <section className="flex justify-center">
+                    <DottedButton className="flex items-center justify-center gap-2" onClick={handleImportTxt}>
+                        <Import size={24} />
+                        <span>Import from a .txt file</span>
+                    </DottedButton>
+                </section>
+            )}
         </main>
     );
 
